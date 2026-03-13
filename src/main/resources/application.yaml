@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: papergenerator
+
+  ai:
+    ollama:
+      base-url: http://192.168.1.16
+      chat:
+        options:
+          model: llama3.1:8b
+
+    vectorstore:
+      pinecone:
+        apiKey: pcsk_4Q9qFW_Cx7sn2xMR7EjFm8H8R4KdXUS6n1SpRkGxQjpPSG7pzmd7gJxurVRfBpHKaWyhDW
+        index-name: school-notes
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
