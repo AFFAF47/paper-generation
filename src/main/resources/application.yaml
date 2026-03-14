@@ -4,15 +4,21 @@ spring:
 
   ai:
     ollama:
-      base-url: http://192.168.1.16
+      base-url: http://192.168.1.16:11434
       chat:
         options:
           model: llama3.1:8b
+      embedding:
+        options:
+          model: nomic-embed-text
 
     vectorstore:
       pinecone:
-        apiKey: pcsk_4Q9qFW_Cx7sn2xMR7EjFm8H8R4KdXUS6n1SpRkGxQjpPSG7pzmd7gJxurVRfBpHKaWyhDW
-        index-name: school-notes
+        apiKey: "pcsk_4Q9qFW_Cx7sn2xMR7EjFm8H8R4KdXUS6n1SpRkGxQjpPSG7pzmd7gJxurVRfBpHKaWyhDW"
+        index-name: "school-notes"
+        project-id: "r3jj6iu"
+        environment: "aped-4627-b74a"
+        namespace: "default"
 
   servlet:
     multipart:
