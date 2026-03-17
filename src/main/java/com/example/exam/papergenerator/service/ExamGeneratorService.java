@@ -1,5 +1,7 @@
 package com.example.exam.papergenerator.service;
 
+import com.example.exam.papergenerator.model.ExamRecord;
+import com.example.exam.papergenerator.respository.ExamRepository;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -14,25 +16,21 @@ public class ExamGeneratorService {
 
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
+    private final ExamRepository examRepository; // Injecting MongoDB repository
 
-    public ExamGeneratorService(ChatClient.Builder builder, VectorStore vectorStore) {
+    public ExamGeneratorService(ChatClient.Builder builder, VectorStore vectorStore, ExamRepository examRepository) {
         this.chatClient = builder.build();
         this.vectorStore = vectorStore;
+        this.examRepository = examRepository;
     }
 
     public String generateExam(String subject, String className, String chapter, String pattern) {
 
-        // 1. Create the Filter for our "Silo"
-        // This ensures we only get notes for the specific class/subject
-        String namespace = (subject + "-class" + className).toLowerCase();
-
-        // 2. Fetch relevant notes from Pinecone
-        // Replace the old SearchRequest line with this:
+        // 1. Fetch relevant notes from Pinecone
         List<Document> similarDocuments = vectorStore.similaritySearch(
                 SearchRequest.builder()
                         .query(chapter)
-                        .topK(5) // Use the builder method
-                        // This tells Pinecone to ONLY look in the specific class silo
+                        .topK(5)
                         .filterExpression("subject == '" + subject + "' && class == '" + className + "'")
                         .build()
         );
@@ -41,29 +39,46 @@ public class ExamGeneratorService {
                 .map(Document::getText)
                 .collect(Collectors.joining("\n"));
 
-        // 3. Build the "Teacher" Prompt
+        // 2. Updated "Strict Format" Prompt
         String userPrompt = String.format("""
-                You are an expert school teacher. Use the following context from the class notes to generate an exam.
+                You are an expert school teacher. Use the provided context to generate an exam.
                 
-                CONTEXT FROM NOTES:
+                CONTEXT:
                 %s
                 
-                EXAM PATTERN REQUEST:
-                Subject: %s
-                Class: %s
-                Chapter: %s
+                REQUEST:
+                Subject: %s | Class: %s | Chapter: %s
                 Pattern: %s
                 
-                INSTRUCTIONS:
-                - Generate questions ONLY from the provided context.
-                - Follow the pattern strictly.
-                - Include a 'Memorandum' or 'Answer Key' at the end.
+                STRICT FORMATTING RULES:
+                1. SECTION 1: THE QUESTION PAPER
+                   - List all questions (MCQs, Short/Long Answers).
+                   - DO NOT include answers in this section.
+                2. SECTION 2: THE ANSWER KEY
+                   - Place this at the very end after a '--- END OF PAPER ---' marker.
+                   - Provide all correct options and marking points here only.
                 """, context, subject, className, chapter, pattern);
 
-        // 4. Call your Windows PC (Ollama)
-        return chatClient.prompt()
+        // 3. Call AI
+        String aiResponse = chatClient.prompt()
                 .user(userPrompt)
                 .call()
                 .content();
+
+        // 4. SAVE TO MONGODB ATLAS
+        ExamRecord record = new ExamRecord();
+        record.setSubject(subject);
+        record.setClassName(className);
+        record.setChapter(chapter);
+        record.setPattern(pattern);
+        record.setContent(aiResponse);
+
+        examRepository.save(record); // This pushes it to your Atlas cluster
+
+        return aiResponse;
+    }
+
+    public List<ExamRecord> getHistory(String subject, String className) {
+        return examRepository.findBySubjectAndClassNameOrderByCreatedAtDesc(subject, className);
     }
 }

@@ -2,9 +2,14 @@ spring:
   application:
     name: papergenerator
 
+  data:
+    mongodb:
+      uri: mongodb+srv://anasaffaf_db_user:6rKiB2KWEhut6Nhb@school-app-cluster.6vnazkk.mongodb.net/
+      database: school_ai_db
+
   ai:
     ollama:
-      base-url: http://192.168.1.16:11434
+      base-url: http://100.64.85.8:11434
       chat:
         options:
           model: llama3.1:8b
