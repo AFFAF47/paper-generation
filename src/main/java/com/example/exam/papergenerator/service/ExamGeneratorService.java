@@ -77,4 +77,8 @@ public class ExamGeneratorService {
 
         return aiResponse;
     }
+
+    public List<ExamRecord> getHistory(String subject, String className) {
+        return examRepository.findBySubjectAndClassNameOrderByCreatedAtDesc(subject, className);
+    }
 }

@@ -9,7 +9,7 @@ spring:
 
   ai:
     ollama:
-      base-url: http://192.168.1.16:11434
+      base-url: http://100.64.85.8:11434
       chat:
         options:
           model: llama3.1:8b
