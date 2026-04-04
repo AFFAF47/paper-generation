@@ -1,21 +1,34 @@
-# ... (Keep Stage 1 and Stage 2 the same) ...
+# STAGE 1: Extract Tailscale
+FROM alpine:latest AS tailscale_stage
+WORKDIR /app
+RUN apk add --no-cache curl tar
+RUN curl -fsSL https://pkgs.tailscale.com/stable/tailscale_1.64.0_amd64.tgz | tar xzf - --strip-components=1
+
+# STAGE 2: Build the Java JAR
+FROM maven:3.9.6-eclipse-temurin-21 AS build_stage
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
 # STAGE 3: Final Runtime
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-COPY --from=tailscale /app/tailscale /usr/local/bin/tailscale
-COPY --from=tailscale /app/tailscaled /usr/local/bin/tailscaled
-COPY --from=build /app/target/*.jar app.jar
+# Copy Tailscale from the first stage
+COPY --from=tailscale_stage /app/tailscale /usr/local/bin/tailscale
+COPY --from=tailscale_stage /app/tailscaled /usr/local/bin/tailscaled
 
-# UPDATED: Use userspace networking and socks5 proxy if needed
+# Copy the JAR from the build stage
+COPY --from=build_stage /app/target/*.jar app.jar
+
+# Startup Script with Userspace networking fix
 RUN echo '#!/bin/sh\n\
 tailscaled --tun=userspace-networking --socks5-server=localhost:1055 & \n\
 until tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=render-app-java; do \n\
-  echo "Waiting for tailscale to come up..." \n\
+  echo "Waiting for Tailscale to connect..." \n\
   sleep 2 \n\
 done \n\
-echo "Tailscale is up! Starting Java..." \n\
+echo "Tailscale connected! Starting Spring Boot..." \n\
 java -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 8080
