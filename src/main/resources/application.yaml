@@ -9,7 +9,7 @@ spring:
 
   ai:
     ollama:
-      base-url: ${TAILSCALE_IP}
+      base-url: http://${TAILSCALE_IP}:11434
       chat:
         options:
           model: llama3.1:8b
