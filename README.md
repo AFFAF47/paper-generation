@@ -56,3 +56,6 @@ The project is built on the principle of **Retrieval-Augmented Generation (RAG)*
 - [ ] **Smart Subject Management:** Dashboard to manage and update note silos.
 - [ ] **AI Grading Assistant:** Grade handwritten answers against stored keys.
 - [ ] **User Auth:** Multi-teacher login support.
+
+## Live
+* Service is Live at `https://paper-generation-p9il.onrender.com/exams`
