@@ -18,7 +18,7 @@ public class UploadController {
     @PostMapping("/upload")
     public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file,
                                          @RequestParam("subject") String subject,
-                                         @RequestParam("class") String className,
+                                         @RequestParam("className") String className,
                                          @RequestParam("chapter") String chapter) {
 
         ingestionService.uploadNotes(file, subject, className, chapter);

@@ -16,9 +16,13 @@
         border: 1px solid #dee2e6;
         border-radius: 5px;
     }
-
-    <style>
-    /* ... your existing styles ... */
+    .nav-link {
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    .nav-link:hover {
+      color: #ffca2c !important; /* Gold hover effect */
+    }
 
     @media print {
         /* 1. Hide everything that isn't the exam content */
@@ -56,9 +60,43 @@
         }
     }
   </style>
-  </style>
 </head>
 <body class="container py-5">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+  <div class="container">
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="/exams">
+      <i class="bi bi-cpu-fill me-2"></i> AI Exam Portal
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item px-2">
+          <a class="nav-link active" href="/exams">
+            <i class="bi bi-file-earmark-plus"></i> Generate
+          </a>
+        </li>
+        <li class="nav-item px-2">
+          <a class="nav-link" href="/exams/upload">
+            <i class="bi bi-cloud-upload"></i> Upload
+          </a>
+        </li>
+        <li class="nav-item px-2">
+          <a class="nav-link" href="/exams/history-view">
+            <i class="bi bi-clock-history"></i> History
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h2 class="fw-bold">Exam History</h2>

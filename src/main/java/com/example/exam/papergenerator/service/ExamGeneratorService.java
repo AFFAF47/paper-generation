@@ -26,12 +26,14 @@ public class ExamGeneratorService {
 
     public String generateExam(String subject, String className, String chapter, String pattern) {
 
+        String subjectLower = subject.toLowerCase();
+        String classLower = className.toLowerCase();
         // 1. Fetch relevant notes from Pinecone
         List<Document> similarDocuments = vectorStore.similaritySearch(
                 SearchRequest.builder()
                         .query(chapter)
                         .topK(5)
-                        .filterExpression("subject == '" + subject + "' && class == '" + className + "'")
+                        .filterExpression(String.format("subject == '%s' && class == '%s'", subjectLower, classLower))
                         .build()
         );
 

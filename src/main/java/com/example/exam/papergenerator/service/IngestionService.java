@@ -33,9 +33,9 @@ public class IngestionService {
             String namespace = (subject + "-class" + className).toLowerCase();
 
             for (Document doc : documents) {
-                doc.getMetadata().put("chapter", chapter);
-                doc.getMetadata().put("subject", subject);
-                doc.getMetadata().put("class", className);
+                doc.getMetadata().put("chapter", chapter.toLowerCase());
+                doc.getMetadata().put("subject", subject.toLowerCase());
+                doc.getMetadata().put("class", className.toLowerCase());
             }
 
             // 4. Send to Pinecone

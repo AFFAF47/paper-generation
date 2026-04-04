@@ -21,6 +21,11 @@ public class ExamViewController {
         this.examService = examService;
     }
 
+    @GetMapping("/")
+    public String home() {
+        return "redirect:/exams"; // Automatically sends the user to the generator
+    }
+
     // This loads the initial empty page
     @GetMapping
     public String showExamPage() {
@@ -72,5 +77,10 @@ public class ExamViewController {
         model.addAttribute("subject", subject);
         model.addAttribute("className", className);
         return "exam-history";
+    }
+
+    @GetMapping("/upload")
+    public String showUploadPage() {
+        return "upload-notes"; // This must match your HTML filename
     }
 }

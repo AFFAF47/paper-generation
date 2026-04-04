@@ -4,12 +4,12 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb+srv://anasaffaf_db_user:6rKiB2KWEhut6Nhb@school-app-cluster.6vnazkk.mongodb.net/
+      uri: ${MONGODB_URI}
       database: school_ai_db
 
   ai:
     ollama:
-      base-url: http://100.64.85.8:11434
+      base-url: ${TAILSCALE_IP}
       chat:
         options:
           model: llama3.1:8b
@@ -19,7 +19,7 @@ spring:
 
     vectorstore:
       pinecone:
-        apiKey: "pcsk_4Q9qFW_Cx7sn2xMR7EjFm8H8R4KdXUS6n1SpRkGxQjpPSG7pzmd7gJxurVRfBpHKaWyhDW"
+        apiKey: ${PINECONE_API_KEY}
         index-name: "school-notes"
         project-id: "r3jj6iu"
         environment: "aped-4627-b74a"
