@@ -15,7 +15,7 @@ public class OllamaConfig {
     @Bean
     public RestClientCustomizer proxyRestClientCustomizer() {
         return (restClientBuilder) -> {
-            Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 9050));
+            Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 12345));
             SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
             requestFactory.setProxy(proxy);
             restClientBuilder.requestFactory(requestFactory);

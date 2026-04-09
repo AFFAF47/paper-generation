@@ -19,8 +19,8 @@ COPY --from=tailscale_stage /app/tailscaled /usr/local/bin/tailscaled
 COPY --from=build_stage /app/target/*.jar app.jar
 
 RUN echo '#!/bin/sh\n\
-# Start tailscaled with SOCKS5 on 9050\n\
-tailscaled --tun=userspace-networking --socks5-server=localhost:9050 & \n\
+# Start tailscaled with SOCKS5 on 12345\n\
+tailscaled --tun=userspace-networking --socks5-server=localhost:12345 & \n\
 \n\
 sleep 5 \n\
 \n\
@@ -29,6 +29,8 @@ tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=render-app-java \n\
 echo "Tailscale is up! Starting Java..." \n\
 \n\
 # NO PROXY FLAGS HERE - This stops the SOCKS errors\n\
+# This will show us exactly what is listening on what port
+netstat -tpln
 java -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 8080
