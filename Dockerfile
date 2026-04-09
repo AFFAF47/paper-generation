@@ -22,14 +22,15 @@ COPY --from=tailscale_stage /app/tailscaled /usr/local/bin/tailscaled
 COPY --from=build_stage /app/target/*.jar app.jar
 
 # Startup Script with Userspace networking fix
+# UPDATED: We use socks5h:// to ensure DNS is also handled by the tunnel
 RUN echo '#!/bin/sh\n\
 tailscaled --tun=userspace-networking --socks5-server=localhost:1055 & \n\
 until tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=render-app-java; do \n\
-  echo "Waiting for Tailscale to connect..." \n\
+  echo "Waiting for Tailscale..." \n\
   sleep 2 \n\
 done \n\
-echo "Tailscale connected! Starting Spring Boot..." \n\
-java -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
+echo "Tailscale is up! Starting Java..." \n\
+# We pass the proxy settings directly to the JVM to avoid "Incompatible SOCKS version" errors
+java -DsocksProxyHost=127.0.0.1 -DsocksProxyPort=1055 -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
 
-EXPOSE 8080
 ENTRYPOINT ["/app/start.sh"]
