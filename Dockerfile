@@ -18,16 +18,16 @@ COPY --from=tailscale_stage /app/tailscale /usr/local/bin/tailscale
 COPY --from=tailscale_stage /app/tailscaled /usr/local/bin/tailscaled
 COPY --from=build_stage /app/target/*.jar app.jar
 
-# UPDATED: Re-added SOCKS5 server and explicitly told Java to use it
 RUN echo '#!/bin/sh\n\
-tailscaled --tun=userspace-networking --socks5-server=localhost:1055 & \n\
+# Start tailscaled without the manual socks-server flag to avoid port conflicts
+tailscaled --tun=userspace-networking & \n\
 until tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=render-app-java; do \n\
   echo "Waiting for Tailscale..." \n\
   sleep 2 \n\
 done \n\
 echo "Tailscale is up! Starting Java..." \n\
-# -DsocksProxyHost/Port is the reliable way to bridge Java to Tailscale
-java -DsocksProxyHost=127.0.0.1 -DsocksProxyPort=1055 -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
+# Just a clean start. Tailscale handles the 100.x.x.x IP routing in the background.
+java -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/app/start.sh"]
