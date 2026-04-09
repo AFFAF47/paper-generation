@@ -14,12 +14,15 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
+# Copy Tailscale binaries from Stage 1
 COPY --from=tailscale_stage /app/tailscale /usr/local/bin/tailscale
 COPY --from=tailscale_stage /app/tailscaled /usr/local/bin/tailscaled
+
+# Copy the built JAR from Stage 2
 COPY --from=build_stage /app/target/*.jar app.jar
 
+# THE FIX: Single-line Java command to avoid "unknown instruction" error
 RUN echo '#!/bin/sh\n\
-# Move SOCKS to 9050 to avoid the management port (1055) \n\
 tailscaled --tun=userspace-networking --socks5-server=localhost:9050 & \n\
 \n\
 sleep 5 \n\
@@ -28,11 +31,7 @@ tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=render-app-java \n\
 \n\
 echo "Tailscale is up! Starting Java..." \n\
 \n\
-# Tell Java: Proxy ONLY for the 100.x.x.x range, DIRECT for everything else \n\
-java -DsocksProxyHost=127.0.0.1 \\
-     -DsocksProxyPort=9050 \\
-     -Dhttp.nonProxyHosts="localhost|127.0.0.1|*.render.com|*.onrender.com|*.mongodb.net|*.pinecone.io" \\
-     -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
+java -DsocksProxyHost=127.0.0.1 -DsocksProxyPort=9050 -Dhttp.nonProxyHosts="localhost|127.0.0.1|*.render.com|*.onrender.com|*.mongodb.net|*.pinecone.io" -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/app/start.sh"]
