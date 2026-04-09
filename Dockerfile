@@ -18,15 +18,21 @@ COPY --from=tailscale_stage /app/tailscale /usr/local/bin/tailscale
 COPY --from=tailscale_stage /app/tailscaled /usr/local/bin/tailscaled
 COPY --from=build_stage /app/target/*.jar app.jar
 
+# UPDATED: Added a 3-second sleep and improved the login logic
 RUN echo '#!/bin/sh\n\
-# Start tailscaled without the manual socks-server flag to avoid port conflicts
+# Start the daemon in the background
 tailscaled --tun=userspace-networking & \n\
+\n\
+# WAIT for the daemon to initialize to avoid the "panic" error
+sleep 3 \n\
+\n\
+echo "Attempting to connect to Tailscale..." \n\
 until tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=render-app-java; do \n\
-  echo "Waiting for Tailscale..." \n\
+  echo "Tailscale not ready yet, retrying in 2s..." \n\
   sleep 2 \n\
 done \n\
+\n\
 echo "Tailscale is up! Starting Java..." \n\
-# Just a clean start. Tailscale handles the 100.x.x.x IP routing in the background.
 java -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 8080
