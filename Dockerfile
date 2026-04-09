@@ -38,7 +38,7 @@ done \n\
 echo "Tailscale is up! Starting Java..." \n\
 \n\
 # 2. Tell the JVM to route network requests through the Tailscale SOCKS5 proxy \n\
-java -DsocksProxyHost=127.0.0.1 -DsocksProxyPort=1055 -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
+java -DproxySet=true -DsocksProxyHost=127.0.0.1 -DsocksProxyPort=1055 -jar app.jar' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/app/start.sh"]
