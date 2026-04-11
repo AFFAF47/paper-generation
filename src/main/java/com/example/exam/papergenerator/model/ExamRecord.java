@@ -14,6 +14,7 @@ public class ExamRecord {
     private String className;
     private String chapter;
     private String pattern;
+    private MessageStatus status;
     private String content; // The AI generated text
     private LocalDateTime createdAt = LocalDateTime.now();
 }
