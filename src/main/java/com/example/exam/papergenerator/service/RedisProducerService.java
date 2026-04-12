@@ -11,21 +11,20 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class RedisProducerService {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate; // Note: Changed to Object for DTO support
 
     private static final String STREAM_KEY = "exam_tasks";
 
-    public void publishExamTask(String documentId, String prompt, String email) {
-        ExamRequest request = new ExamRequest(documentId, prompt, email);
+    public void publishExamTask(String id, String subject, String className, String chapter, String pattern) {
+        // Create the request with all 5 fields
+        ExamRequest request = new ExamRequest(id, subject, className, chapter, pattern);
 
-        // Create a Redis Stream Record
         ObjectRecord<String, ExamRequest> record = StreamRecords.newRecord()
                 .ofObject(request)
                 .withStreamKey(STREAM_KEY);
 
-        // Push to Upstash Redis
         this.redisTemplate.opsForStream().add(record);
 
-        System.out.println("Task published to Redis Stream: " + documentId);
+        System.out.println("Task queued for Home Worker. ID: " + id);
     }
 }

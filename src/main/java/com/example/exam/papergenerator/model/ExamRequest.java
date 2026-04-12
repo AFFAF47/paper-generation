@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExamRequest {
-    private String id;        // MongoDB Document ID
-    private String prompt;    // The actual instructions for the AI
-    private String userEmail; // To notify the user when done
+    private String id;         // MongoDB Document ID
+    private String subject;    // Needed for Pinecone Filter
+    private String className;  // Needed for Pinecone Filter
+    private String chapter;    // Needed for Vector Search
+    private String pattern;    // Needed for AI Prompt
 }
