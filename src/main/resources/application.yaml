@@ -6,10 +6,17 @@ spring:
     mongodb:
       uri: ${MONGODB_URI}
       database: school_ai_db
+    # Added Redis Configuration for Upstash
+    redis:
+      url: ${UPSTASH_REDIS_URL}
+      ssl:
+        enabled: true
 
   ai:
     ollama:
-      base-url: http://127.0.0.1:11434
+      # Disabled auto-connection since Render won't talk to Ollama directly
+      enabled: false
+      base-url: http://localhost:11434
       chat:
         options:
           model: llama3.1:8b
