@@ -1,30 +1,35 @@
 package com.example.exam.papergenerator.service;
 
-import com.example.exam.papergenerator.model.ExamRequest;
-import lombok.AllArgsConstructor;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
-@AllArgsConstructor
 public class RedisProducerService {
 
-    private final RedisTemplate<String, Object> redisTemplate; // Note: Changed to Object for DTO support
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final String STREAM_KEY = "exam_tasks";
+    // Use Constructor Injection instead of @Autowired on the field
+    public RedisProducerService(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     public void publishExamTask(String id, String subject, String className, String chapter, String pattern) {
-        // Create the request with all 5 fields
-        ExamRequest request = new ExamRequest(id, subject, className, chapter, pattern);
+        // Now this.redisTemplate will never be null
+        Map<String, String> taskMap = new HashMap<>();
+        taskMap.put("id", id);
+        taskMap.put("subject", subject);
+        taskMap.put("className", className);
+        taskMap.put("chapter", chapter);
+        taskMap.put("pattern", pattern);
 
-        ObjectRecord<String, ExamRequest> record = StreamRecords.newRecord()
-                .ofObject(request)
-                .withStreamKey(STREAM_KEY);
+        this.redisTemplate.opsForStream().add(StreamRecords.newRecord()
+                .ofMap(taskMap)
+                .withStreamKey("exam_tasks"));
 
-        this.redisTemplate.opsForStream().add(record);
-
-        System.out.println("Task queued for Home Worker. ID: " + id);
+        System.out.println("✅ Task Published successfully!");
     }
 }

@@ -4,7 +4,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -15,14 +14,16 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // Key is a simple String
-        template.setKeySerializer(new StringRedisSerializer());
+        // Force EVERYTHING to use String Serialization
+        // This ensures Redis sees raw text, not encoded bytes
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
-        // Value is JSON!
-        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
-        template.setValueSerializer(serializer);
-        template.setHashValueSerializer(serializer); // For Streams
+        template.setKeySerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setValueSerializer(stringSerializer); // Force values to strings
+        template.setHashValueSerializer(stringSerializer); // Force hash values to strings
 
+        template.afterPropertiesSet();
         return template;
     }
 }
