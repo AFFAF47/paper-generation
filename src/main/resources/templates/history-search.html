@@ -14,11 +14,15 @@
     <form th:action="@{/exams/history/results}" method="get">
         <div class="mb-3">
             <label class="form-label">Subject</label>
-            <input type="text" name="subject" class="form-control" placeholder="e.g. Physics" required>
+            <input type="text" name="subject" class="form-control" placeholder="e.g. Physics">
         </div>
         <div class="mb-3">
             <label class="form-label">Class</label>
-            <input type="text" name="className" class="form-control" placeholder="e.g. 10" required>
+            <input type="text" name="className" class="form-control" placeholder="e.g. 10">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Id</label>
+            <input type="text" name="id" class="form-control" placeholder="e.g. PAPER_1">
         </div>
         <button type="submit" class="btn btn-primary w-100">Fetch History from Atlas</button>
         <div class="text-center mt-3">

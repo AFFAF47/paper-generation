@@ -54,11 +54,22 @@ public class ExamViewController {
     @GetMapping("/history")
     public String viewHistory(@RequestParam String subject,
                               @RequestParam String className,
+                              @RequestParam String id,
                               Model model) {
-        List<ExamRecord> history = examService.getHistory(subject, className);
+        List<ExamRecord> history = examService.getHistory(subject, className, id);
         model.addAttribute("historyList", history);
         model.addAttribute("subject", subject);
         return "exam-history"; // We will create this HTML next
+    }
+
+    //check with model and how to put this on UI
+    @GetMapping("/history/{id}")
+    public String viewHistoryById(@RequestParam String id, Model model) {
+        ExamRecord history = examService.getHistoryById(id);
+        model.addAttribute("historyList", history);
+        model.addAttribute("subject", history.getSubject());
+        model.addAttribute("className", history.getClassName());
+        return "exam-history";
     }
 
     // 1. Show a simple search page for history
@@ -71,11 +82,13 @@ public class ExamViewController {
     @GetMapping("/history/results")
     public String getHistoryResults(@RequestParam String subject,
                                     @RequestParam String className,
+                                    @RequestParam String id,
                                     Model model) {
-        List<ExamRecord> history = examService.getHistory(subject, className);
+        List<ExamRecord> history = examService.getHistory(subject, className, id);
         model.addAttribute("historyList", history);
         model.addAttribute("subject", subject);
         model.addAttribute("className", className);
+        model.addAttribute("id", id);
         return "exam-history";
     }
 
