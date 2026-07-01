@@ -4,13 +4,11 @@ spring:
 
   data:
     mongodb:
-      #uri: ${MONGODB_URI}
-      uri: mongodb+srv://anasaffaf_db_user:6rKiB2KWEhut6Nhb@school-app-cluster.6vnazkk.mongodb.net/  # uncomment this when running in local
+      uri: ${MONGODB_URI}
       database: school_ai_db
     # Added Redis Configuration for Upstash
     redis:
-      #url: ${UPSTASH_REDIS_URL}
-      url: rediss://default:gQAAAAAAAdovAAIgcDFjOGI2YWZiMzcyY2Y0YmUwOTQ5OGYwMGE3NTgzZTU0Zg@flexible-dane-121391.upstash.io:6379   # uncomment this when running in local
+      url: ${UPSTASH_REDIS_URL}
       ssl:
         enabled: true
 
@@ -28,8 +26,7 @@ spring:
 
     vectorstore:
       pinecone:
-        #apiKey: ${PINECONE_API_KEY}
-        apiKey: pcsk_4Q9qFW_Cx7sn2xMR7EjFm8H8R4KdXUS6n1SpRkGxQjpPSG7pzmd7gJxurVRfBpHKaWyhDW #uncomment this when running this on local
+        apiKey: ${PINECONE_API_KEY}
         index-name: "school-notes"
         project-id: "r3jj6iu"
         environment: "aped-4627-b74a"
