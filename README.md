@@ -8,17 +8,17 @@ A sophisticated full-stack Spring Boot application that utilizes **RAG (Retrieva
 The project is built on the principle of **Retrieval-Augmented Generation (RAG)**. Instead of relying on a model's general knowledge, it "retrieves" your specific notes to "augment" the AI's generation.
 
 ### 1. Ingestion (The Library)
-* [cite_start]**PDF Processing:** Documents are parsed and broken into smaller text "chunks"[cite: 6].
+* **PDF Processing:** Documents are parsed and broken into smaller text "chunks".
 * **Vector Embeddings:** Text is converted into mathematical vectors using the `nomic-embed-text` model on a remote Windows PC.
-* [cite_start]**Vector Storage:** These vectors are stored in **Pinecone**, organized by Subject and Class metadata for precise retrieval[cite: 5, 6].
+* **Vector Storage:** These vectors are stored in **Pinecone**, organized by Subject and Class metadata for precise retrieval.
 
 ### 2. Retrieval & Generation (The Brain)
-* [cite_start]**Similarity Search:** When an exam is requested, the system finds the most relevant chunks in Pinecone based on the chapter name[cite: 1, 5].
+* **Similarity Search:** When an exam is requested, the system finds the most relevant chunks in Pinecone based on the chapter name.
 * **Contextual Prompting:** The retrieved text is injected into a "Teacher Prompt" sent to **Llama 3.1**.
-* [cite_start]**Execution:** The LLM generates questions (MCQs, Long Answers) and an Answer Key based *only* on the provided notes[cite: 9, 11, 12, 15].
+* **Execution:** The LLM generates questions (MCQs, Long Answers) and an Answer Key based *only* on the provided notes.
 
 ### 3. Storage & Export (The Archive)
-* [cite_start]**MongoDB Atlas:** Every generated paper is saved to a cloud-hosted history log[cite: 2, 4].
+* **MongoDB Atlas:** Every generated paper is saved to a cloud-hosted history log.
 * **Professional PDF:** Uses **OpenPDF** to generate branded A4 documents with automated page breaks for the answer key.
 
 ---
@@ -30,6 +30,8 @@ The project is built on the principle of **Retrieval-Augmented Generation (RAG)*
 | **AI Models** | Llama 3.1 (LLM), nomic-embed-text (Embeddings) |
 | **Vector DB** | Pinecone |
 | **Database** | MongoDB Atlas |
+| **Cache / Queue** | Upstash Redis |
+| **Compute / Hosting** | AWS Lambda (Container Image) with AWS Lambda Web Adapter |
 | **Networking** | Tailscale (Secure Mesh VPN) |
 | **Frontend** | Thymeleaf, Bootstrap 5 |
 | **PDF Engine** | OpenPDF / LibrePDF |
@@ -41,6 +43,7 @@ The project is built on the principle of **Retrieval-Augmented Generation (RAG)*
 * **Smart Subject Silos:** Metadata filtering ensures Physics questions only come from Physics notes.
 * **Automated Answer Keys:** AI places answers at the end of the document after a strict delimiter.
 * **Branded PDF Export:** Server-side PDF generation ensures consistent formatting with school logos.
+* **Zero Idle Cost Architecture:** Hosted on AWS Lambda with a Function URL, scaling down to 0 instances when not in use.
 
 ---
 
@@ -52,10 +55,89 @@ The project is built on the principle of **Retrieval-Augmented Generation (RAG)*
 
 ---
 
+## 🌐 Live Access
+* **Live Endpoint:** `https://2t2saofkd5ngmt7ahmrnaynujq0tutlw.lambda-url.ap-south-1.on.aws/exams`
+
+---
+
+## 🐳 Docker Build & Deploy to AWS Lambda
+
+Whenever you make code updates or enhancements, run this sequence to build the single-architecture container, push to Amazon ECR, and update the live Lambda function.
+
+### 1. Authenticate Docker with ECR
+```bash
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 558260070804.dkr.ecr.ap-south-1.amazonaws.com
+```
+
+### 2. Build Multi-Stage Image (Provenance Disabled)
+> **Note:** `--provenance=false` is strictly required to ensure Docker generates a single-manifest OCI image compatible with AWS Lambda.
+```bash
+docker buildx build \
+  --platform linux/amd64 \
+  --provenance=false \
+  -t 558260070804.dkr.ecr.ap-south-1.amazonaws.com/paper-generation:latest \
+  --load .
+```
+
+### 3. Push Image to ECR
+```bash
+docker push 558260070804.dkr.ecr.ap-south-1.amazonaws.com/paper-generation:latest
+```
+
+### 4. Deploy New Image to Lambda
+> Simply pushing to ECR does not automatically reload Lambda. Run this command to tell Lambda to pull the new `:latest` digest:
+```bash
+aws lambda update-function-code \
+  --function-name paper-generation-app \
+  --image-uri 558260070804.dkr.ecr.ap-south-1.amazonaws.com/paper-generation:latest \
+  --region ap-south-1
+```
+
+### 5. Tail CloudWatch Logs (Optional Debugging)
+```bash
+aws logs tail /aws/lambda/paper-generation-app --region ap-south-1 --follow
+```
+
+---
+
+## ⚡ Automated Deployment Script (`deploy.sh`)
+
+You can create an executable script in the root of your project to automate deployments:
+
+```bash
+#!/usr/bin/env bash
+set -e
+
+ACCOUNT_ID="558260070804"
+REGION="ap-south-1"
+REPO="paper-generation"
+FUNCTION="paper-generation-app"
+IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}:latest"
+
+echo "🔐 Logging in to Amazon ECR..."
+aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
+
+echo "🔨 Building Docker image..."
+docker buildx build --platform linux/amd64 --provenance=false -t ${IMAGE_URI} --load .
+
+echo "📤 Pushing image to ECR..."
+docker push ${IMAGE_URI}
+
+echo "🚀 Updating Lambda function code..."
+aws lambda update-function-code --function-name ${FUNCTION} --image-uri ${IMAGE_URI} --region ${REGION}
+
+echo "✅ Deployment complete! Live at: https://2t2saofkd5ngmt7ahmrnaynujq0tutlw.lambda-url.ap-south-1.on.aws/exams"
+```
+
+To use it:
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+---
+
 ## 🗺️ Roadmap
 - [ ] **Smart Subject Management:** Dashboard to manage and update note silos.
 - [ ] **AI Grading Assistant:** Grade handwritten answers against stored keys.
 - [ ] **User Auth:** Multi-teacher login support.
-
-## Live
-* Service is Live at `https://paper-generation-p9il.onrender.com/exams`
