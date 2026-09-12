@@ -57,6 +57,7 @@ The project is built on the principle of **Retrieval-Augmented Generation (RAG)*
 
 ## 🌐 Live Access
 * **Live Endpoint:** `https://2t2saofkd5ngmt7ahmrnaynujq0tutlw.lambda-url.ap-south-1.on.aws/exams`
+* **Shorter URL: ** `https://bit.ly/papergenerator`
 
 ---
 
