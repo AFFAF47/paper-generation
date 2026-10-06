@@ -3,7 +3,6 @@ package com.example.exam.papergenerator.service;
 import com.example.exam.papergenerator.model.ExamRecord;
 import com.example.exam.papergenerator.respository.ExamRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;

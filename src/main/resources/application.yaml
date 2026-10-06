@@ -31,3 +31,5 @@ spring:
 app:
   sqs:
     queue-name: exam-generation-queue
+  s3:
+    bucket-name: exam-paper-generator-bucket-558260070804-ap-south-1-an
