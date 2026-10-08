@@ -8,9 +8,17 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
+# 1. Add the AWS Lambda Web Adapter extension
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+
+# 2. Tell the adapter and Spring Boot which port to target
+ENV PORT=8080
+ENV AWS_LWA_READINESS_CHECK_PATH=/exams
+
 # Copy the built JAR from Stage 1
 COPY --from=build_stage /app/target/*.jar app.jar
 
-# Simple entrypoint - no sidecars needed!
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# 3. Fast-boot JVM flags (reduces Spring Boot cold start time)
+ENTRYPOINT ["java", "-XX:+TieredCompilation", "-XX:TieredStopAtLevel=1", "-jar", "app.jar"]

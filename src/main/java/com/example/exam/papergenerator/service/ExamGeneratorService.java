@@ -3,7 +3,6 @@ package com.example.exam.papergenerator.service;
 import com.example.exam.papergenerator.model.ExamRecord;
 import com.example.exam.papergenerator.respository.ExamRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -17,10 +16,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExamGeneratorService {
 
-    private final RedisProducerService redisProducerService;
+    private final SqsProducerService sqsProducerService;
     private final DbSequenceGeneratorService dbSequenceGeneratorService;
     private final MongoTemplate mongoTemplate;
-    private final VectorStore vectorStore;
     private final ExamRepository examRepository; // Injecting MongoDB repository
 
     public String generateExam(String subject, String className, String chapter, String pattern) {
@@ -36,7 +34,7 @@ public class ExamGeneratorService {
 
         // 2. Put the raw request into Redis
         // We send 'chapter' so the worker can do the Pinecone search locally
-        redisProducerService.publishExamTask(savedRecord.getId(), subject, className, chapter, pattern);
+        sqsProducerService.publishExamTask(savedRecord.getId(), subject, className, chapter, pattern);
 
         return "SUCCESS: Your request is queued with Id: " + savedRecord.getId() + " . Check the history in a moment!";
     }
