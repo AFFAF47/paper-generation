@@ -29,7 +29,7 @@ public class IngestionService {
     @Value("${app.bucket-name:exam-paper-generator-bucket-558260070804-ap-south-1-an}")
     String bucketName;
 
-    public void uploadNotes(String objectKey, String subject, String className, String chapter) {
+    public void uploadNotes(String objectKey, String subject, String className, List<String> chapters) {
         try {
             //1. Stream PDF directly to S3
             ResponseInputStream<GetObjectResponse> s3Stream = s3Client.getObject(
@@ -50,7 +50,7 @@ public class IngestionService {
             String namespace = (subject + "-class" + className).toLowerCase();
 
             for (Document doc : documents) {
-                doc.getMetadata().put("chapter", chapter.toLowerCase());
+                doc.getMetadata().put("chapters", chapters.stream().map(String::toLowerCase).toList());
                 doc.getMetadata().put("subject", subject.toLowerCase());
                 doc.getMetadata().put("class", className.toLowerCase());
             }

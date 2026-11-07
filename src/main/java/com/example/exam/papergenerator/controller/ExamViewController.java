@@ -4,10 +4,7 @@ import com.example.exam.papergenerator.model.ExamRecord;
 import com.example.exam.papergenerator.service.ExamGeneratorService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,16 +34,16 @@ public class ExamViewController {
     public String generateExam(
             @RequestParam String subject,
             @RequestParam String className,
-            @RequestParam String chapter,
             @RequestParam String pattern,
+            @RequestBody List<String> chapters,
             Model model) {
 
-        String result = examService.generateExam(subject, className, chapter, pattern);
+        String result = examService.generateExam(subject, className, chapters, pattern);
 
         // Pass the AI result back to the HTML page
         model.addAttribute("examPaper", result);
         model.addAttribute("subject", subject);
-        model.addAttribute("chapter", chapter);
+        model.addAttribute("chapters", chapters);
 
         return "exam-dashboard";
     }

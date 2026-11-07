@@ -32,7 +32,7 @@ public class PdfDownloadController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "Exam_" + record.getChapter() + ".pdf");
+        headers.setContentDispositionFormData("attachment", "Exam_" + record.getChapters() + ".pdf");
 
         return ResponseEntity.ok().headers(headers).body(pdfBytes);
     }

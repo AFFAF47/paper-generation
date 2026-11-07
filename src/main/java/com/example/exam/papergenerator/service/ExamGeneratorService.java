@@ -21,20 +21,20 @@ public class ExamGeneratorService {
     private final MongoTemplate mongoTemplate;
     private final ExamRepository examRepository; // Injecting MongoDB repository
 
-    public String generateExam(String subject, String className, String chapter, String pattern) {
+    public String generateExam(String subject, String className, List<String> chapters, String pattern) {
         // 1. Just save a shell record in MongoDB so the user sees "Pending"
         ExamRecord record = new ExamRecord();
         record.setId(dbSequenceGeneratorService.GenerateSequence());
         record.setSubject(subject);
         record.setClassName(className);
-        record.setChapter(chapter);
+        record.setChapters(chapters);
         record.setPattern(pattern);
         record.setContent("GENERATING...");
         ExamRecord savedRecord = examRepository.save(record);
 
         // 2. Put the raw request into Redis
         // We send 'chapter' so the worker can do the Pinecone search locally
-        sqsProducerService.publishExamTask(savedRecord.getId(), subject, className, chapter, pattern);
+        sqsProducerService.publishExamTask(savedRecord.getId(), subject, className, chapters, pattern);
 
         return "SUCCESS: Your request is queued with Id: " + savedRecord.getId() + " . Check the history in a moment!";
     }

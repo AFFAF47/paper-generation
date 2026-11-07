@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class SqsProducerService {
@@ -24,12 +26,12 @@ public class SqsProducerService {
         this.queueName = queueName;
     }
 
-    public void publishExamTask(String id, String subject, String className, String chapter, String pattern) {
-        Map<String, String> taskMap = new HashMap<>();
+    public void publishExamTask(String id, String subject, String className, List<String> chapters, String pattern) {
+        Map<String, Object> taskMap = new HashMap<>();
         taskMap.put("id", id);
         taskMap.put("subject", subject);
         taskMap.put("className", className);
-        taskMap.put("chapter", chapter);
+        taskMap.put("chapters", chapters);
         taskMap.put("pattern", pattern);
 
         // Sends message to SQS queue with automatic JSON serialization

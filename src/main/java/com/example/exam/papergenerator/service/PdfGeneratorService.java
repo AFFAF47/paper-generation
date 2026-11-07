@@ -47,7 +47,7 @@ public class PdfGeneratorService {
 
             Paragraph details = new Paragraph(
                     String.format("Subject: %s | Class: %s\nChapter: %s\nDate: %s\n\n",
-                            record.getSubject(), record.getClassName(), record.getChapter(),
+                            record.getSubject(), record.getClassName(), record.getChapters(),
                             record.getCreatedAt().toLocalDate()),
                     subHeaderFont
             );

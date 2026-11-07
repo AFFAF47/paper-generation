@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,9 +60,9 @@ public class UploadController {
     public ResponseEntity<String> upload(@RequestParam("objectKey") String objectKey,
                                          @RequestParam("subject") String subject,
                                          @RequestParam("className") String className,
-                                         @RequestParam("chapter") String chapter) {
+                                         @RequestParam("chapter") List<String> chapters) {
 
-        ingestionService.uploadNotes(objectKey, subject, className, chapter);
+        ingestionService.uploadNotes(objectKey, subject, className, chapters);
         return ResponseEntity.ok("Notes uploaded and vectorized successfully!");
     }
 }
