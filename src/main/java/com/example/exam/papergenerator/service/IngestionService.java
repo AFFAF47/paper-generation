@@ -1,5 +1,6 @@
 package com.example.exam.papergenerator.service;
 
+import com.example.exam.papergenerator.model.KnowledgeTopic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -23,53 +24,54 @@ import java.util.List;
 public class IngestionService {
 
     private final VectorStore vectorStore;
-
     private final S3Client s3Client;
 
     @Value("${app.bucket-name:exam-paper-generator-bucket-558260070804-ap-south-1-an}")
-    String bucketName;
+    private String bucketName;
 
-    public void uploadNotes(String objectKey, String subject, String className, String chapter) {
+    public int uploadTopicPdf(String objectKey, String topicId, KnowledgeTopic.ChapterLabel chapter) {
         try {
-            //1. Stream PDF directly to S3
+            // 1. Stream PDF directly from S3
             ResponseInputStream<GetObjectResponse> s3Stream = s3Client.getObject(
                     GetObjectRequest.builder()
                             .bucket(bucketName)
                             .key(objectKey)
                             .build());
 
-            // 2. Read the PDF from the upload
+            // 2. Read the PDF
             PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(new InputStreamResource(s3Stream));
 
-            // 3. Split the long PDF into small chunks (so the AI doesn't get overwhelmed)
+            // 3. Split into chunks
             TokenTextSplitter splitter = new TokenTextSplitter();
             List<Document> documents = splitter.apply(pdfReader.get());
 
-            // 4. Add Metadata & Namespace logic
-            // We create a unique namespace like "physics-class1"
-            String namespace = (subject + "-class" + className).toLowerCase();
+            // 4. Stamp Workflow A metadata (aligned with Python URL worker)
+            String normalizedTopicId = topicId.trim().toLowerCase();
+            String normalizedChapter = (chapter != null)
+                    ? KnowledgeTopic.ChapterLabel.CHAPTER.name()
+                    : KnowledgeTopic.ChapterLabel.GENERAL.name();
 
             for (Document doc : documents) {
-                doc.getMetadata().put("chapter", chapter.toLowerCase());
-                doc.getMetadata().put("subject", subject.toLowerCase());
-                doc.getMetadata().put("class", className.toLowerCase());
+                doc.getMetadata().put("topicId", normalizedTopicId);
+                doc.getMetadata().put("chapter", normalizedChapter);
+                doc.getMetadata().put("sourceUrl", objectKey);
             }
 
-            // 5. Send to Pinecone
-            // Note: In Spring AI, we pass the namespace via PineconeVectorStore options
+            // 5. Upsert to Pinecone
             vectorStore.add(documents);
+            log.info("Uploaded {} PDF chunks for topicId='{}', chapter='{}'",
+                    documents.size(), normalizedTopicId, normalizedChapter);
 
-            System.out.println("Successfully uploaded " + documents.size() + " chunks to namespace: " + namespace);
+            return documents.size();
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to process PDF: " + e.getMessage());
+            throw new RuntimeException("Failed to process PDF: " + e.getMessage(), e);
         } finally {
             try {
                 s3Client.deleteObject(DeleteObjectRequest.builder()
                         .bucket(bucketName)
                         .key(objectKey)
                         .build());
-
                 log.info("Purged temporary S3 file: {}", objectKey);
             } catch (Exception e) {
                 log.warn("Failed to delete S3 file {}, lifecycle rule will catch it: {}", objectKey, e.getMessage());

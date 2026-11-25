@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ExamRepository extends MongoRepository<ExamRecord, String> {
-    // This will let us show history for a specific class
-    List<ExamRecord> findBySubjectAndClassNameOrderByCreatedAtDesc(String subject, String className);
+    List<ExamRecord> findByTopicIdOrderByCreatedAtDesc(String topicId);
+    List<ExamRecord> findAllByOrderByCreatedAtDesc();
 }

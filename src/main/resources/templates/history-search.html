@@ -13,15 +13,17 @@
     <h3 class="text-center mb-4">View Exam History</h3>
     <form th:action="@{/exams/history/results}" method="get">
         <div class="mb-3">
-            <label class="form-label">Subject</label>
-            <input type="text" name="subject" class="form-control" placeholder="e.g. Physics">
+            <label class="form-label fw-semibold">Study Topic Workspace</label>
+            <select name="topicId" class="form-select">
+                <option value="">-- All Topics --</option>
+                <option th:each="topic : ${topics}"
+                        th:value="${topic.id}"
+                        th:text="${topic.name + ' (' + topic.id + ')'}">
+                </option>
+            </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Class</label>
-            <input type="text" name="className" class="form-control" placeholder="e.g. 10">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Id</label>
+            <label class="form-label fw-semibold">Paper ID <span class="text-muted fw-normal">(Optional)</span></label>
             <input type="text" name="id" class="form-control" placeholder="e.g. PAPER_1">
         </div>
         <button type="submit" class="btn btn-primary w-100">Fetch History from Atlas</button>

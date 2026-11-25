@@ -3,94 +3,52 @@
 <head>
   <title>Exam History</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <style>
     body { background-color: #f8f9fa; }
     .history-card { border: none; border-radius: 10px; transition: transform 0.2s; }
     .history-card:hover { transform: translateY(-5px); }
     .content-preview {
-        white-space: pre-wrap;
-        max-height: 400px;
-        overflow-y: auto;
-        background: #ffffff;
-        padding: 15px;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+      background: #ffffff;
+      padding: 15px;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
     }
-    .nav-link {
-      font-weight: 500;
-      transition: color 0.3s ease;
-    }
-    .nav-link:hover {
-      color: #ffca2c !important; /* Gold hover effect */
-    }
+    .nav-link { font-weight: 500; transition: color 0.3s ease; }
+    .nav-link:hover { color: #ffca2c !important; }
 
     @media print {
-        /* 1. Hide everything that isn't the exam content */
-        .btn, .badge, .card-header, h2, p.text-muted, .navbar, footer {
-            display: none !important;
-        }
-
-        /* 2. Remove gray backgrounds and shadows */
-        body {
-            background-color: white !important;
-            margin: 0;
-            padding: 0;
-        }
-
-        .history-card {
-            box-shadow: none !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        /* 3. Ensure the AI content takes up the full page width */
-        .content-preview {
-            border: none !important;
-            max-height: none !important;
-            overflow: visible !important;
-            font-size: 12pt;
-            line-height: 1.5;
-            width: 100%;
-        }
-
-        /* 4. Force a page break before the Answer Key if you want */
-        .answer-key-section {
-            page-break-before: always;
-        }
+      .btn, .badge, .card-header, h2, p.text-muted, .navbar, footer { display: none !important; }
+      body { background-color: white !important; margin: 0; padding: 0; }
+      .history-card { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; }
+      .content-preview { border: none !important; max-height: none !important; overflow: visible !important; font-size: 12pt; line-height: 1.5; width: 100%; }
+      .answer-key-section { page-break-before: always; }
     }
   </style>
 </head>
 <body class="container py-5">
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4 rounded">
   <div class="container">
     <a class="navbar-brand fw-bold d-flex align-items-center" href="/exams">
       <i class="bi bi-cpu-fill me-2"></i> AI Exam Portal
     </a>
-
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item px-2">
-          <a class="nav-link active" href="/exams">
-            <i class="bi bi-file-earmark-plus"></i> Generate
-          </a>
+          <a class="nav-link" href="/exams"><i class="bi bi-file-earmark-plus"></i> Generate</a>
         </li>
         <li class="nav-item px-2">
-          <a class="nav-link" href="/exams/upload">
-            <i class="bi bi-cloud-upload"></i> Upload
-          </a>
+          <a class="nav-link" href="/exams/upload"><i class="bi bi-cloud-upload"></i> Study Hub / Upload</a>
         </li>
         <li class="nav-item px-2">
-          <a class="nav-link" href="/exams/history-view">
-            <i class="bi bi-clock-history"></i> History
-          </a>
+          <a class="nav-link active" href="/exams/history-view"><i class="bi bi-clock-history"></i> History</a>
         </li>
       </ul>
     </div>
@@ -100,18 +58,25 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h2 class="fw-bold">Exam History</h2>
-    <p class="text-muted" th:text="${subject} + ' - Class ' + ${className}"></p>
+    <p class="text-muted" th:text="${topicName != null ? topicName : 'All Study Topics'}"></p>
   </div>
   <a href="/exams" class="btn btn-primary">Back to Generator</a>
 </div>
 
 <div th:if="${historyList.empty}" class="alert alert-info text-center">
-  No papers found for this subject and class. Try generating one!
+  No papers found for this topic. Try generating one!
 </div>
 
 <div th:each="record : ${historyList}" class="card history-card shadow-sm mb-4">
   <div class="card-header bg-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0 text-primary" th:text="${record.chapter}">Chapter Name</h5>
+    <div>
+      <h5 class="mb-1 text-primary" th:text="${record.topicId}">Topic ID</h5>
+      <span th:if="${record.chapters != null}"
+            th:each="ch : ${record.chapters}"
+            class="badge bg-light text-dark border me-1 text-capitalize"
+            th:text="${ch}">
+      </span>
+    </div>
     <span class="badge bg-secondary" th:text="${#temporals.format(record.createdAt, 'dd MMM yyyy, HH:mm')}">Date</span>
   </div>
   <div class="card-body">
@@ -119,7 +84,7 @@
     <div class="content-preview mb-3" th:text="${record.content}"></div>
     <div class="d-flex gap-2">
       <a th:href="@{'/api/pdf/download/' + ${record.id}}" class="btn btn-danger btn-sm">
-        <i class="bi bi-file-earpdf"></i> Download Official PDF
+        <i class="bi bi-file-earmark-pdf"></i> Download Official PDF
       </a>
     </div>
   </div>

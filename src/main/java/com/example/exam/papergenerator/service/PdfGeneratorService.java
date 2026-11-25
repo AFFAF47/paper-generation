@@ -46,9 +46,9 @@ public class PdfGeneratorService {
             document.add(title);
 
             Paragraph details = new Paragraph(
-                    String.format("Subject: %s | Class: %s\nChapter: %s\nDate: %s\n\n",
-                            record.getSubject(), record.getClassName(), record.getChapter(),
-                            record.getCreatedAt().toLocalDate()),
+                    String.format("TopicId: %s | %s\nDate: %s\n\n",
+                            record.getTopicId(),
+                            record.getCreatedAt()),
                     subHeaderFont
             );
             details.setAlignment(Element.ALIGN_CENTER);

@@ -1,5 +1,6 @@
 package com.example.exam.papergenerator.controller;
 
+import com.example.exam.papergenerator.model.KnowledgeTopic;
 import com.example.exam.papergenerator.service.IngestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,11 +58,10 @@ public class UploadController {
 
     @PostMapping("/upload")
     public ResponseEntity<String> upload(@RequestParam("objectKey") String objectKey,
-                                         @RequestParam("subject") String subject,
-                                         @RequestParam("className") String className,
-                                         @RequestParam("chapter") String chapter) {
+                                         @RequestParam("topicId") String topicId, // see how we can generate this?
+                                         @RequestParam("chapter") KnowledgeTopic.ChapterLabel chapter) {
 
-        ingestionService.uploadNotes(objectKey, subject, className, chapter);
+        ingestionService.uploadTopicPdf(objectKey, topicId, chapter);
         return ResponseEntity.ok("Notes uploaded and vectorized successfully!");
     }
 }

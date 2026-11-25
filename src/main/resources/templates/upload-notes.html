@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Upload Subject Notes</title>
+  <title>Study Hub — Knowledge Base Manager</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <style>
@@ -10,50 +10,37 @@
     .drop-zone {
       border: 2px dashed #0d6efd;
       border-radius: 10px;
-      padding: 40px;
+      padding: 35px;
       text-align: center;
       background: #f8f9fa;
       transition: 0.3s;
       cursor: pointer;
     }
     .drop-zone:hover { background: #e9ecef; }
-    .nav-link {
-      font-weight: 500;
-      transition: color 0.3s ease;
-    }
-    .nav-link:hover {
-      color: #ffca2c !important;
-    }
+    .nav-link { font-weight: 500; transition: color 0.3s ease; }
+    .nav-link:hover { color: #ffca2c !important; }
   </style>
 </head>
 <body class="container py-5">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4 rounded">
   <div class="container">
     <a class="navbar-brand fw-bold d-flex align-items-center" href="/exams">
       <i class="bi bi-cpu-fill me-2"></i> AI Exam Portal
     </a>
-
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item px-2">
-          <a class="nav-link active" href="/exams">
-            <i class="bi bi-file-earmark-plus"></i> Generate
-          </a>
+          <a class="nav-link" href="/exams"><i class="bi bi-file-earmark-plus"></i> Generate</a>
         </li>
         <li class="nav-item px-2">
-          <a class="nav-link" href="/exams/upload">
-            <i class="bi bi-cloud-upload"></i> Upload
-          </a>
+          <a class="nav-link active" href="/exams/upload"><i class="bi bi-cloud-upload"></i> Study Hub / Upload</a>
         </li>
         <li class="nav-item px-2">
-          <a class="nav-link" href="/exams/history-view">
-            <i class="bi bi-clock-history"></i> History
-          </a>
+          <a class="nav-link" href="/exams/history-view"><i class="bi bi-clock-history"></i> History</a>
         </li>
       </ul>
     </div>
@@ -61,75 +48,191 @@
 </nav>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2>📚 Knowledge Base Manager</h2>
+  <div>
+    <h2 class="fw-bold mb-0">📚 Study Hub Knowledge Manager</h2>
+    <p class="text-muted small mb-0">Organize chapter PDFs and Web URLs into Topic Workspaces</p>
+  </div>
   <a href="/exams" class="btn btn-outline-primary">Back to Generator</a>
 </div>
 
-<div class="card upload-card shadow-sm p-4">
+<div class="card upload-card shadow-sm p-4 mb-5">
   <form id="uploadForm">
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label fw-bold">Subject</label>
-        <input type="text" id="subject" name="subject" class="form-control" placeholder="e.g., Physics" required>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label fw-bold">Class / Grade</label>
-        <input type="text" id="className" name="className" class="form-control" placeholder="e.g., 10" required>
-      </div>
-      <div class="col-12">
-        <label class="form-label fw-bold">Chapter / Unit Name</label>
-        <input type="text" id="chapter" name="chapter" class="form-control" placeholder="e.g., Light Reflection" required>
+    <!-- Step 1: Workspace Selection + Chapter Tag -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <label class="form-label fw-bold">Study Topic Workspace</label>
+        <select id="existingTopicSelect" class="form-select">
+          <option value="__NEW__" selected>+ Create New Study Topic</option>
+          <option th:each="topic : ${topics}"
+                  th:value="${topic.id}"
+                  th:data-name="${topic.name}"
+                  th:text="${topic.name + ' (' + topic.id + ')'}">
+          </option>
+        </select>
       </div>
 
-      <div class="col-12 mt-4">
+      <div class="col-md-4">
+        <label class="form-label fw-bold">Topic Display Name</label>
+        <input type="text" id="topicName" class="form-control" placeholder="e.g., Class 10 Physics" required>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label fw-bold">Topic Namespace ID</label>
+        <input type="text" id="topicId" class="form-control" placeholder="e.g., class-10-physics" pattern="[a-z0-9\-]+" required>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-bold">Chapter / Unit Name <span class="text-primary">*</span></label>
+        <input type="text" id="chapter" class="form-control" placeholder="e.g., Light Reflection or Module 1: IAM" required>
+        <div class="form-text">Used on the Generate screen so you can include or exclude specific chapters when building an exam.</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Source Type Tabs (PDF vs URL) -->
+    <ul class="nav nav-pills mb-3" id="sourceTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pdf-tab" data-bs-toggle="pill" data-bs-target="#pdf-pane" type="button" role="tab">
+          <i class="bi bi-file-earmark-pdf me-1"></i> Upload Chapter PDF
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="url-tab" data-bs-toggle="pill" data-bs-target="#url-pane" type="button" role="tab">
+          <i class="bi bi-link-45deg me-1"></i> Add Reference URL
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="sourceTabsContent">
+      <!-- Tab 1: PDF Dropzone -->
+      <div class="tab-pane fade show active" id="pdf-pane" role="tabpanel">
         <div class="drop-zone" id="dropZone">
           <i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
-          <p class="mt-2">Drag & Drop PDF Textbook or <span class="text-primary">Browse Files</span></p>
-          <!-- Notice: No name attribute here so it is not submitted in standard form payloads -->
-          <input type="file" id="fileInput" class="d-none" accept=".pdf" required>
+          <p class="mt-2 mb-1">Drag & Drop Chapter PDF or <span class="text-primary fw-semibold">Browse Files</span></p>
+          <small class="text-muted">Uploaded directly to S3 and indexed under this chapter tag</small>
+          <input type="file" id="fileInput" class="d-none" accept=".pdf">
           <div id="fileNameDisplay" class="text-success fw-bold mt-2"></div>
         </div>
       </div>
 
-      <div class="col-12 mt-4">
-        <button type="submit" id="uploadBtn" class="btn btn-primary w-100 btn-lg">
-          Process & Sync to AI Brain
-        </button>
-
-        <div id="progressSection" class="d-none mt-3">
-          <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
-          </div>
-          <p id="progressText" class="text-center text-muted mt-2">Preparing upload...</p>
+      <!-- Tab 2: Static Web URL -->
+      <div class="tab-pane fade" id="url-pane" role="tabpanel">
+        <div class="p-3 bg-light rounded border">
+          <label class="form-label fw-bold">Documentation or Article URL</label>
+          <input type="url" id="sourceUrl" class="form-control" placeholder="https://docs.aws.amazon.com/...">
+          <div class="form-text">Public static HTML pages up to 2 MB are scraped, chunked, and tagged with your Chapter Name.</div>
         </div>
-
-        <div id="statusAlert" class="alert d-none mt-3" role="alert"></div>
       </div>
+    </div>
+
+    <!-- Submit & Progress -->
+    <div class="mt-4">
+      <button type="submit" id="uploadBtn" class="btn btn-primary w-100 btn-lg">
+        <i class="bi bi-send-check me-1"></i> Index Source into Study Hub
+      </button>
+
+      <div id="progressSection" class="d-none mt-3">
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+        </div>
+        <p id="progressText" class="text-center text-muted mt-2">Processing...</p>
+      </div>
+
+      <div id="statusAlert" class="alert d-none mt-3" role="alert"></div>
     </div>
   </form>
 </div>
+
+<!-- Indexed Topics & Chapters Overview -->
+<div class="card upload-card shadow-sm p-4" th:if="${topics != null and !topics.empty}">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">Active Study Topics & Chapters</h5>
+    <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
+      <i class="bi bi-arrow-clockwise"></i> Refresh Status
+    </button>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+      <tr>
+        <th>Topic Name</th>
+        <th>Namespace ID</th>
+        <th>Indexed Chapters</th>
+        <th>Total Chunks</th>
+        <th>Status</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="t : ${topics}">
+        <td class="fw-semibold" th:text="${t.name}"></td>
+        <td><code th:text="${t.id}"></code></td>
+        <td>
+            <span th:each="src : ${t.sources}"
+                  class="badge bg-light text-dark border me-1 mb-1"
+                  th:text="${(src.chapter != null ? src.chapter : 'General') + ' (' + src.type + ' • ' + src.status + ')'}">
+            </span>
+        </td>
+        <td th:text="${t.totalChunks}"></td>
+        <td>
+            <span class="badge"
+                  th:classappend="${t.status == 'READY' ? 'bg-success' : (t.status == 'FAILED' ? 'bg-danger' : 'bg-warning text-dark')}"
+                  th:text="${t.status}">
+            </span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  const existingTopicSelect = document.getElementById('existingTopicSelect');
+  const topicNameInput = document.getElementById('topicName');
+  const topicIdInput = document.getElementById('topicId');
+  const chapterInput = document.getElementById('chapter');
   const dropZone = document.getElementById('dropZone');
   const fileInput = document.getElementById('fileInput');
   const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const sourceUrlInput = document.getElementById('sourceUrl');
   const uploadForm = document.getElementById('uploadForm');
   const uploadBtn = document.getElementById('uploadBtn');
   const progressSection = document.getElementById('progressSection');
   const progressText = document.getElementById('progressText');
   const statusAlert = document.getElementById('statusAlert');
 
-  // Drag and drop handlers
+  let activeSourceType = 'PDF';
+  document.getElementById('pdf-tab').addEventListener('shown.bs.tab', () => activeSourceType = 'PDF');
+  document.getElementById('url-tab').addEventListener('shown.bs.tab', () => activeSourceType = 'URL');
+
+  existingTopicSelect.onchange = () => {
+    const val = existingTopicSelect.value;
+    if (val === '__NEW__') {
+      topicNameInput.value = '';
+      topicIdInput.value = '';
+      topicNameInput.readOnly = false;
+      topicIdInput.readOnly = false;
+    } else {
+      const selectedOpt = existingTopicSelect.options[existingTopicSelect.selectedIndex];
+      topicIdInput.value = val;
+      topicNameInput.value = selectedOpt.getAttribute('data-name');
+      topicNameInput.readOnly = true;
+      topicIdInput.readOnly = true;
+    }
+  };
+
+  topicNameInput.oninput = () => {
+    if (existingTopicSelect.value === '__NEW__') {
+      topicIdInput.value = topicNameInput.value
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+    }
+  };
+
   dropZone.onclick = () => fileInput.click();
-
-  dropZone.ondragover = (e) => {
-    e.preventDefault();
-    dropZone.classList.add('bg-light');
-  };
-
-  dropZone.ondragleave = () => {
-    dropZone.classList.remove('bg-light');
-  };
-
+  dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('bg-light'); };
+  dropZone.ondragleave = () => dropZone.classList.remove('bg-light');
   dropZone.ondrop = (e) => {
     e.preventDefault();
     dropZone.classList.remove('bg-light');
@@ -138,20 +241,20 @@
       fileNameDisplay.innerText = "Selected: " + e.dataTransfer.files[0].name;
     }
   };
-
   fileInput.onchange = (e) => {
     if (e.target.files.length > 0) {
       fileNameDisplay.innerText = "Selected: " + e.target.files[0].name;
     }
   };
 
-  // Form submission: Presign -> Direct S3 PUT -> Trigger Vectorization
   uploadForm.onsubmit = async (e) => {
     e.preventDefault();
+    const topicId = topicIdInput.value.trim();
+    const topicName = topicNameInput.value.trim();
+    const chapter = chapterInput.value.trim();
 
-    const file = fileInput.files[0];
-    if (!file) {
-      alert("Please select a PDF file first.");
+    if (!topicId || !topicName || !chapter) {
+      alert("Please fill in Topic Name, Namespace ID, and Chapter Name.");
       return;
     }
 
@@ -160,59 +263,68 @@
     statusAlert.classList.add('d-none');
 
     try {
-      // 1. Get Presigned Upload URL from backend
-      progressText.innerText = "Requesting secure S3 upload link...";
-      const presignResponse = await fetch(`/api/notes/presigned-url?fileName=${encodeURIComponent(file.name)}`);
+      if (activeSourceType === 'PDF') {
+        const file = fileInput.files[0];
+        if (!file) throw new Error("Please select a PDF file first.");
 
-      if (!presignResponse.ok) {
-        throw new Error("Could not retrieve upload URL from server.");
+        progressText.innerText = "Requesting secure S3 upload link...";
+        const presignRes = await fetch(`/api/notes/presigned-url?fileName=${encodeURIComponent(file.name)}`);
+        if (!presignRes.ok) throw new Error("Could not retrieve S3 presigned URL.");
+        const { uploadUrl, objectKey } = await presignRes.json();
+
+        progressText.innerText = `Uploading ${file.name} directly to S3...`;
+        const s3Res = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/pdf' },
+          body: file
+        });
+        if (!s3Res.ok) throw new Error("Direct S3 upload failed.");
+
+        progressText.innerText = `Indexing chapter '${chapter}' into Pinecone...`;
+        const processRes = await fetch('/api/topics/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topicId,
+            topicName,
+            chapter,
+            sourceType: 'PDF',
+            objectKey,
+            fileName: file.name
+          })
+        });
+        if (!processRes.ok) throw new Error(await processRes.text() || "PDF ingestion failed.");
+
+      } else {
+        const url = sourceUrlInput.value.trim();
+        if (!url) throw new Error("Please enter a valid HTTP/HTTPS URL.");
+
+        progressText.innerText = `Queuing URL under chapter '${chapter}' to SQS...`;
+        const urlRes = await fetch('/api/topics/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topicId,
+            topicName,
+            chapter,
+            sourceType: 'URL',
+            url
+          })
+        });
+        if (!urlRes.ok) throw new Error(await urlRes.text() || "Failed to queue URL job.");
       }
 
-      const { uploadUrl, objectKey } = await presignResponse.json();
-
-      // 2. Upload directly to S3 (bypasses Lambda 6 MB payload limit)
-      progressText.innerText = `Uploading ${file.name} directly to storage...`;
-      const s3Response = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/pdf'
-        },
-        body: file
-      });
-
-      if (!s3Response.ok) {
-        throw new Error("Direct upload to S3 failed. Please check CORS configuration.");
-      }
-
-      // 3. Notify backend to download from S3, embed to Pinecone, and purge
-      progressText.innerText = "Indexing chunks with Bedrock Titan & syncing vectors...";
-      const formData = new FormData();
-      formData.append('objectKey', objectKey);
-      formData.append('subject', document.getElementById('subject').value);
-      formData.append('className', document.getElementById('className').value);
-      formData.append('chapter', document.getElementById('chapter').value);
-
-      const processResponse = await fetch('/api/notes/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!processResponse.ok) {
-        const errorMsg = await processResponse.text();
-        throw new Error(errorMsg || "Vectorization failed on server.");
-      }
-
-      // Success UI state
       progressSection.classList.add('d-none');
       statusAlert.className = "alert alert-success mt-3";
-      statusAlert.innerText = "✅ Notes successfully processed and synced to vector database!";
+      statusAlert.innerText = `✅ Chapter '${chapter}' added to '${topicName}'!`;
       statusAlert.classList.remove('d-none');
-      uploadForm.reset();
+      chapterInput.value = "";
+      fileInput.value = "";
+      sourceUrlInput.value = "";
       fileNameDisplay.innerText = "";
       uploadBtn.classList.remove('d-none');
 
     } catch (err) {
-      console.error(err);
       progressSection.classList.add('d-none');
       uploadBtn.classList.remove('d-none');
       statusAlert.className = "alert alert-danger mt-3";

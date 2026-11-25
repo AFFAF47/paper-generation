@@ -1,7 +1,11 @@
 package com.example.exam.papergenerator.controller;
 
 import com.example.exam.papergenerator.model.ExamRecord;
+import com.example.exam.papergenerator.model.KnowledgeTopic;
+import com.example.exam.papergenerator.respository.ExamRepository;
+import com.example.exam.papergenerator.respository.KnowledgeTopicRepository;
 import com.example.exam.papergenerator.service.ExamGeneratorService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +20,15 @@ import java.util.List;
 public class ExamViewController {
 
     private final ExamGeneratorService examService;
+    private final KnowledgeTopicRepository topicRepository;
+    private final ExamRepository examRepository;
 
-    public ExamViewController(ExamGeneratorService examService) {
+    public ExamViewController(ExamGeneratorService examService,
+                              KnowledgeTopicRepository topicRepository,
+                              ExamRepository examRepository) {
         this.examService = examService;
+        this.topicRepository = topicRepository;
+        this.examRepository = examRepository;
     }
 
     @GetMapping("/")
@@ -34,21 +44,24 @@ public class ExamViewController {
 
     // This handles the form submission
     @PostMapping("/generate")
-    public String generateExam(
-            @RequestParam String subject,
-            @RequestParam String className,
-            @RequestParam String chapter,
+    public ResponseEntity<String> generate(
+            @RequestParam String topicId,
+            @RequestParam(required = false) List<String> selectedChapters,
             @RequestParam String pattern,
             Model model) {
 
-        String result = examService.generateExam(subject, className, chapter, pattern);
+        KnowledgeTopic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new IllegalArgumentException("Topic Not Found: " + topicId));
 
-        // Pass the AI result back to the HTML page
-        model.addAttribute("examPaper", result);
-        model.addAttribute("subject", subject);
-        model.addAttribute("chapter", chapter);
+        List<String> normalizeChapters = (selectedChapters != null)
+                ? selectedChapters.stream().map(c -> c.trim().toLowerCase()).toList() : List.of();
 
-        return "exam-dashboard";
+        String generatedPaper = examService.generateExam(topicId, normalizeChapters, pattern);
+
+        model.addAttribute("topics", topicRepository.findAll());
+        model.addAttribute("topicName", topic.getName());
+        model.addAttribute("examPaper", generatedPaper);
+        return ResponseEntity.ok(generatedPaper);
     }
 
     @GetMapping("/history")
@@ -62,13 +75,12 @@ public class ExamViewController {
         return "exam-history"; // We will create this HTML next
     }
 
+    //TODO: check if this needs to be addressed
     //check with model and how to put this on UI
     @GetMapping("/history/{id}")
     public String viewHistoryById(@RequestParam String id, Model model) {
         ExamRecord history = examService.getHistoryById(id);
         model.addAttribute("historyList", history);
-        model.addAttribute("subject", history.getSubject());
-        model.addAttribute("className", history.getClassName());
         return "exam-history";
     }
 
@@ -79,16 +91,25 @@ public class ExamViewController {
     }
 
     // 2. Fetch and show the results
-    @GetMapping("/history/results")
-    public String getHistoryResults(@RequestParam String subject,
-                                    @RequestParam String className,
-                                    @RequestParam String id,
-                                    Model model) {
-        List<ExamRecord> history = examService.getHistory(subject, className, id);
-        model.addAttribute("historyList", history);
-        model.addAttribute("subject", subject);
-        model.addAttribute("className", className);
-        model.addAttribute("id", id);
+    @GetMapping("/exams/history/results")
+    public String viewHistoryResults(@RequestParam(required = false) String topicId,
+                                     @RequestParam(required = false) String id,
+                                     Model model) {
+        List<ExamRecord> historyList;
+
+        if (id != null && !id.isBlank()) {
+            historyList = examRepository.findById(id.trim())
+                    .map(List::of)
+                    .orElse(List.of());
+        } else if (topicId != null && !topicId.isBlank()) {
+            historyList = examRepository.findByTopicIdOrderByCreatedAtDesc(topicId.trim().toLowerCase());
+            topicRepository.findById(topicId.trim().toLowerCase())
+                    .ifPresent(t -> model.addAttribute("topicName", t.getName()));
+        } else {
+            historyList = examRepository.findAllByOrderByCreatedAtDesc();
+        }
+
+        model.addAttribute("historyList", historyList);
         return "exam-history";
     }
 
