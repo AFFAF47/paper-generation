@@ -23,7 +23,7 @@ public class ExamController {
         this.examService = examService;
         this.topicRepository = topicRepository;
     }
-
+    //TODO: Marked for CleanUp
     @GetMapping("/generate")
     public ResponseEntity<String> generate(
             @RequestParam String topicId,

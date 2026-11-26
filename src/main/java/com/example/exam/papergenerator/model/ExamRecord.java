@@ -17,5 +17,6 @@ public class ExamRecord {
     private List<String> chapters;
     private String pattern;
     private String content; // The AI generated text
+    private String status;
     private Instant createdAt = Instant.now();
 }

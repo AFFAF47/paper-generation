@@ -30,6 +30,7 @@ public class ExamGeneratorService {
         record.setChapters(chapters);
         record.setPattern(pattern);
         record.setContent("GENERATING...");
+        record.setStatus("GENERATING");
         record.setCreatedAt(Instant.now());
         ExamRecord savedRecord = examRepository.save(record);
 
