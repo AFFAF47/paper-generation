@@ -45,17 +45,10 @@ public class ExamGeneratorService {
         return "SUCCESS: Your request is queued with Id: " + savedRecord.getId() + " . Check the history in a moment!";
     }
 
-    public List<ExamRecord> getHistory(String subject, String className, String id) {
+    public List<ExamRecord> getHistory(String id) {
         Query query = new Query();
         List<Criteria> criteriaList = new ArrayList<>();
 
-        // 1. Dynamically add criteria if parameters are present
-        if (subject != null && !subject.isEmpty()) {
-            criteriaList.add(Criteria.where("subject").is(subject));
-        }
-        if (className != null && !className.isEmpty()) {
-            criteriaList.add(Criteria.where("className").is(className));
-        }
         if (id != null && !id.isEmpty()) {
             criteriaList.add(Criteria.where("id").is(id)); // or "_id" depending on your mapping
         }

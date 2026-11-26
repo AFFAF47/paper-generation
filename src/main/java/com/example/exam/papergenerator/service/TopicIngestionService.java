@@ -43,8 +43,8 @@ public class TopicIngestionService {
         }
 
         String normalizedTopicId = request.getTopicId().trim().toLowerCase();
-        KnowledgeTopic.ChapterLabel chapterLabel = (request.getChapter() != null)
-                ? request.getChapter() : KnowledgeTopic.ChapterLabel.GENERAL;
+        String chapter = (request.getChapter() != null && !request.getChapter().isBlank())
+                ? request.getChapter().toUpperCase() : "GENERAL";
 
         KnowledgeTopic topic = topicRepository.findById(normalizedTopicId)
                 .orElseGet(() -> KnowledgeTopic.builder()
@@ -54,18 +54,18 @@ public class TopicIngestionService {
                         .build());
 
         if (SourceType.PDF.equals(sourceType)) {
-            return handlePdfIngestion(topic, request, sourceIdentifier, chapterLabel);
+            return handlePdfIngestion(topic, request, sourceIdentifier, chapter);
         } else {
-            return handleUrlIngestion(topic, sourceIdentifier, chapterLabel);
+            return handleUrlIngestion(topic, sourceIdentifier, chapter);
         }
     }
 
     private KnowledgeTopic handlePdfIngestion (KnowledgeTopic topic, IngestionRequest request,
-                                               String objectKey, KnowledgeTopic.ChapterLabel chapterLabel) {
+                                               String objectKey, String chapter) {
         //Track the PDF source in MongoDB
         KnowledgeTopic.TopicSource pdfSource = KnowledgeTopic.TopicSource.builder()
                 .url(objectKey)
-                .chapter(chapterLabel)
+                .chapter(chapter)
                 .type(SourceType.PDF)
                 .fileName(request.getFileName())
                 .status(KnowledgeTopic.TopicStatus.PROCESSING)
@@ -78,7 +78,7 @@ public class TopicIngestionService {
         topicRepository.save(topic);
 
         try {
-            int chunksCreated = ingestionService.uploadTopicPdf(objectKey, topic.getId(), chapterLabel);
+            int chunksCreated = ingestionService.uploadTopicPdf(objectKey, topic.getId(), chapter);
 
             pdfSource.setStatus(KnowledgeTopic.TopicStatus.DONE);
             pdfSource.setChunkCount(chunksCreated);
@@ -98,11 +98,11 @@ public class TopicIngestionService {
     }
 
     private KnowledgeTopic handleUrlIngestion (KnowledgeTopic topic, String url,
-                                               KnowledgeTopic.ChapterLabel chapterLabel) {
+                                               String chapter) {
 
         KnowledgeTopic.TopicSource urlSource = KnowledgeTopic.TopicSource.builder()
                 .url(url)
-                .chapter(chapterLabel)
+                .chapter(chapter)
                 .type(SourceType.URL)
                 .status(KnowledgeTopic.TopicStatus.PENDING)
                 .chunkCount(0)
@@ -118,7 +118,7 @@ public class TopicIngestionService {
         try {
             Map<String, String> sqsPayload = new HashMap<>();
             sqsPayload.put("topicId", topic.getId());
-            sqsPayload.put("chapter", chapterLabel.name());
+            sqsPayload.put("chapter", chapter);
             sqsPayload.put("sourceType", SourceType.URL.name());
             sqsPayload.put("url", url);
 
@@ -132,7 +132,7 @@ public class TopicIngestionService {
                             .build());
 
             log.info("Dispatched ingestion task to SQS for topicId={} chapter='{}' source={}",
-                    topic.getId(), chapterLabel, url);
+                    topic.getId(), chapter, url);
 
             return topic;
 

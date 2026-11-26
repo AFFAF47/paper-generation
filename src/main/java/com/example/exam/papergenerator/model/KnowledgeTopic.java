@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collation = "knowledge_topic")
+@Document(collection = "knowledge_topic")
 public class KnowledgeTopic {
 
     @Id
@@ -35,7 +35,7 @@ public class KnowledgeTopic {
     @AllArgsConstructor
     public static class TopicSource {
         private String url;   // web url or s3 objectkey
-        private ChapterLabel chapter;  // chapter/unit label
+        private String chapter;  // Name of the chapter or module
         private SourceType type;   // PDF, URL
         private String fileName;
         private TopicStatus status;  // "Pending, Processing, Done, Failed"
@@ -54,10 +54,5 @@ public class KnowledgeTopic {
         INDEXING,
         READY,
         FAILED
-    }
-
-    public enum ChapterLabel {
-        CHAPTER,
-        GENERAL
     }
 }

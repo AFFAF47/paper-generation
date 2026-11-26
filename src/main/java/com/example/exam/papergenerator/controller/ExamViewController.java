@@ -8,10 +8,7 @@ import com.example.exam.papergenerator.service.ExamGeneratorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -38,7 +35,8 @@ public class ExamViewController {
 
     // This loads the initial empty page
     @GetMapping
-    public String showExamPage() {
+    public String showExamPage(Model model) {
+        model.addAttribute("topics", topicRepository.findAll());
         return "exam-dashboard";
     }
 
@@ -65,13 +63,10 @@ public class ExamViewController {
     }
 
     @GetMapping("/history")
-    public String viewHistory(@RequestParam String subject,
-                              @RequestParam String className,
-                              @RequestParam String id,
+    public String viewHistory(@RequestParam String id,
                               Model model) {
-        List<ExamRecord> history = examService.getHistory(subject, className, id);
+        List<ExamRecord> history = examService.getHistory(id);
         model.addAttribute("historyList", history);
-        model.addAttribute("subject", subject);
         return "exam-history"; // We will create this HTML next
     }
 
@@ -80,7 +75,8 @@ public class ExamViewController {
     @GetMapping("/history/{id}")
     public String viewHistoryById(@RequestParam String id, Model model) {
         ExamRecord history = examService.getHistoryById(id);
-        model.addAttribute("historyList", history);
+        List<ExamRecord> historyList = (history != null) ? List.of(history) : List.of();
+        model.addAttribute("historyList", historyList);
         return "exam-history";
     }
 

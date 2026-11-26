@@ -59,7 +59,7 @@ public class UploadController {
     @PostMapping("/upload")
     public ResponseEntity<String> upload(@RequestParam("objectKey") String objectKey,
                                          @RequestParam("topicId") String topicId, // see how we can generate this?
-                                         @RequestParam("chapter") KnowledgeTopic.ChapterLabel chapter) {
+                                         @RequestParam("chapter") String chapter) {
 
         ingestionService.uploadTopicPdf(objectKey, topicId, chapter);
         return ResponseEntity.ok("Notes uploaded and vectorized successfully!");

@@ -29,7 +29,7 @@ public class IngestionService {
     @Value("${app.bucket-name:exam-paper-generator-bucket-558260070804-ap-south-1-an}")
     private String bucketName;
 
-    public int uploadTopicPdf(String objectKey, String topicId, KnowledgeTopic.ChapterLabel chapter) {
+    public int uploadTopicPdf(String objectKey, String topicId, String chapter) {
         try {
             // 1. Stream PDF directly from S3
             ResponseInputStream<GetObjectResponse> s3Stream = s3Client.getObject(
@@ -47,9 +47,9 @@ public class IngestionService {
 
             // 4. Stamp Workflow A metadata (aligned with Python URL worker)
             String normalizedTopicId = topicId.trim().toLowerCase();
-            String normalizedChapter = (chapter != null)
-                    ? KnowledgeTopic.ChapterLabel.CHAPTER.name()
-                    : KnowledgeTopic.ChapterLabel.GENERAL.name();
+            String normalizedChapter = (chapter != null && !chapter.isBlank())
+                    ? chapter
+                    : "GENERAL";
 
             for (Document doc : documents) {
                 doc.getMetadata().put("topicId", normalizedTopicId);

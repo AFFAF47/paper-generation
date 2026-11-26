@@ -63,7 +63,7 @@
   <a href="/exams" class="btn btn-primary">Back to Generator</a>
 </div>
 
-<div th:if="${historyList.empty}" class="alert alert-info text-center">
+<div th:if="${#lists.isEmpty(historyList)}" class="alert alert-info text-center">
   No papers found for this topic. Try generating one!
 </div>
 

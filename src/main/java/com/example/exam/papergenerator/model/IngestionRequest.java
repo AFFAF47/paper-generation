@@ -6,7 +6,7 @@ import lombok.Data;
 public class IngestionRequest {
     private String topicId;
     private String topicName;
-    private KnowledgeTopic.ChapterLabel chapter;   //eg: "LightReflection or SystemDesign Module 1
+    private String chapter;   //eg: "LightReflection or SystemDesign Module 1
     private SourceType sourceType;  // eg: URL or PDF
     private String url;
     private String objectKey;

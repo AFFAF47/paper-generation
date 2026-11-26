@@ -31,5 +31,6 @@ spring:
 app:
   sqs:
     exam-generation-queue-name: exam-generation-queue
+    ingestion-queue-url: ingestion-task-queue
   s3:
     bucket-name: exam-paper-generator-bucket-558260070804-ap-south-1-an

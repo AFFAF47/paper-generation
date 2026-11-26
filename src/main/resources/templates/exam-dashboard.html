@@ -86,7 +86,7 @@
                     <option value="" disabled selected>-- Select a Study Topic --</option>
                     <option th:each="topic : ${topics}"
                             th:value="${topic.id}"
-                            th:disabled="${topic.status != 'READY'}"
+                            th:disabled="${topic.status == null or topic.status.toString() != 'READY'}"
                             th:text="${topic.name + ' (' + topic.id + ') — [' + topic.status + ' • ' + topic.totalChunks + ' chunks]'}">
                     </option>
                 </select>
